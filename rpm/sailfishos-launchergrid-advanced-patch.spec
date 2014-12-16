@@ -11,7 +11,7 @@ BuildArch: noarch
 
 Summary:    Launcher grid advanced patch
 Version:    0.0.1
-Release:    1
+Release:    2
 Group:      Qt/Qt
 License:    TODO
 Source0:    %{name}-%{version}.tar.bz2
