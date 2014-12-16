@@ -1,0 +1,75 @@
+commit d3153df796bbc0eb432a0f7c2471c2caf33e4be3
+Author: CODeRUS <coderusinbox@gmail.com>
+Date:   Tue Dec 16 00:06:19 2014 +0500
+
+    Change launcher grid on the fly
+    
+    And first row labels bonus
+
+diff --git a/usr/share/lipstick-jolla-home-qt5/launcher/LauncherGrid.qml b/usr/share/lipstick-jolla-home-qt5/launcher/LauncherGrid.qml
+index 14b8538..3a22f65 100644
+--- a/usr/share/lipstick-jolla-home-qt5/launcher/LauncherGrid.qml
++++ b/usr/share/lipstick-jolla-home-qt5/launcher/LauncherGrid.qml
+@@ -11,15 +11,24 @@ import Sailfish.Silica 1.0
+ import Sailfish.Silica.private 1.0
+ import Sailfish.Lipstick 1.0
+ import org.nemomobile.dbus 1.0
++import org.nemomobile.configuration 1.0
+ 
+ SilicaGridView {
+     id: gridview
+ 
++    ConfigurationGroup {
++        id: launcherSettings
++        path: "/apps/lipstick-jolla-home-qt5/settings"
++        property int launcherColumns: 5
++        property bool firstRowLabel: false
++    }
++
+     property Item reorderItem
+     property Item movingItem
+-    property int columns: 4
++    property int columns: launcherSettings.launcherColumns
++    property real scaleFactor: 4 / columns
+     property int initialCellWidth: (desktop.width - Theme.paddingLarge * 2) / columns
+-    property real firstRowOpacity: Math.min(Math.max((dashboard.contentY - dashboard.lockscreenAndStatusAreaHeight)/cellHeight, 0.0), 1.0)
++    property real firstRowOpacity: launcherSettings.firstRowLabel ? 1.0 : Math.min(Math.max((dashboard.contentY - dashboard.lockscreenAndStatusAreaHeight)/cellHeight, 0.0), 1.0)
+     property bool launcherEditMode: desktop.removeApplicationEnabled
+     property var launcherModel: model
+     property bool rootFolder
+@@ -31,8 +40,8 @@ SilicaGridView {
+     width: cellWidth * columns
+     anchors.horizontalCenter: parent.horizontalCenter
+     // Increase cellWidth so that icon vertical edges are Theme.paddingLarge away from display edges
+-    cellWidth: Math.round(initialCellWidth + (initialCellWidth - Theme.iconSizeLauncher) / (columns - 1))
+-    cellHeight: Math.round(Screen.height / 6)
++    cellWidth: Math.round(initialCellWidth + (columns > 1 ? (initialCellWidth - Theme.iconSizeLauncher * scaleFactor) / (columns - 1) : 0))
++    cellHeight: columns > 1 ? Math.round(Screen.height / Math.round(Screen.height / Math.round(Screen.height / 6 * scaleFactor))) : (Screen.height / 2)
+ 
+     function categoryQsTrIds() {
+         //% "AudioVideo"
+@@ -440,10 +449,14 @@ SilicaGridView {
+                 id: launcherIcon
+                 anchors {
+                     centerIn: parent
+-                    verticalCenterOffset: rootFolder && index <= 3  ? 0 : Math.round(-launcherText.height/2)
++                    verticalCenterOffset: rootFolder && index < gridview.columns  ? 0 : Math.round(-launcherText.height/2)
+                 }
+                 icon: model.object.iconId
+                 pressed: down
++                width: Theme.iconSizeLauncher * gridview.scaleFactor
++                height: Theme.iconSizeLauncher * gridview.scaleFactor
++                sourceSize.width: Theme.iconSizeLauncher * gridview.scaleFactor
++                sourceSize.height: Theme.iconSizeLauncher * gridview.scaleFactor
+                 opacity: isUpdating && folderItemCount == 0 ? 0.2 : 1.0
+                 Text {
+                     font.pixelSize: Theme.fontSizeExtraLarge
+@@ -473,7 +486,7 @@ SilicaGridView {
+                 elide: Text.ElideRight
+ 
+                 color: down ? Theme.highlightColor : Theme.primaryColor
+-                font.pixelSize: Theme.fontSizeTiny
++                font.pixelSize: Theme.fontSizeTiny * gridview.scaleFactor
+                 text: object.title
+                 visible: !launcherEditMode || itemType === LauncherModel.Folder
+             }
